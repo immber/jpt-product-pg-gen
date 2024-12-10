@@ -1,8 +1,31 @@
 import fs from 'fs';
 import { parse } from "csv-parse";
+import {staticVars} from './src/definitions.js'
 
-import {AMAZON_KEY} from './src/definitions.js'
+//start building each product with static var default values
+const prodDeets = {
+    name: "",
+    slug: "",
+    mainProductImage: "",
+    pageHeaderImage: "",
+    category: staticVars.category,
+    collectionID: staticVars.collectionID,
+    excludeFromMustHaveList: staticVars.excludeFromMustHaves.toString().toUpperCase(),
+    enableRatings: staticVars.enableRatings.toString().toUpperCase(),
+    shortProdDesc: "",
+    longProdDesc: "",
+    reviewHeadline: "",
+    reviewSnippet: "",
+    prosList: "",
+    consList: "",
+    reviewPageContent: "",
+    partnerLink: "",
+    partnerLinkLabel: staticVars.partnerLinkLabel,
+    amznLink: "",
+    photoGallery: ""
+}
 
+//parse the csv input
 const records = [];
 const csvFile = process.argv[2];
 
@@ -18,11 +41,13 @@ fs.createReadStream(csvFile, (err) => {
     })
     .on("end", function(){
         console.log(records);
+        
     }))
 
-    
-console.log(AMAZON_KEY);
-
+// step 0: read csv (name, amznProdID, partnerLink)
+// step 1: AmznAPI
+// step 2: ClaudAPI
+// step 3: Webflow create product
 
 
 
