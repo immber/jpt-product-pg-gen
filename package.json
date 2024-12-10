@@ -1,0 +1,12 @@
+{
+  "name": "jpt-product-pg-gen",
+  "version": "1.0.0",
+  "description": "Makes webflow pages for products",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "type": "module"
+}
