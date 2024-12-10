@@ -1,6 +1,8 @@
 import fs from 'fs';
 import { parse } from "csv-parse";
-import {staticVars} from './src/definitions.js'
+import {staticVars} from './src/definitions.js';
+import {getAmznBlob} from './src/amazon.js';
+
 
 //start building each product with static var default values
 const prodDeets = {
@@ -33,6 +35,17 @@ if (!csvFile) {
     throw new Error('missing csv file');
 }
 
+
+async function processRecords(records){
+    for (const record of records){
+        const csv_name = record[0];
+        const csv_amznProdID = record[1];
+        const csv_partnerLink = record[2];
+        const amznBlob = await getAmznBlob(csv_amznProdID);
+        console.log(amznBlob);
+    }
+}
+
 fs.createReadStream(csvFile, (err) => {
     if (err) ;
     }).pipe(parse({ delimiter:",", from_line: 2 })
@@ -40,8 +53,8 @@ fs.createReadStream(csvFile, (err) => {
         records.push(row);
     })
     .on("end", function(){
-        console.log(records);
-        
+        processRecords(records);
+       
     }))
 
 // step 0: read csv (name, amznProdID, partnerLink)

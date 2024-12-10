@@ -8,8 +8,8 @@ Tool to make /product pages on JustPolyThings.com
 
 see `/sample.csv` for example layout
 
-### Env Vars
-see `/.sample-env` for sample .env file 
+<!-- ### Env Vars
+see `/.sample-env` for sample .env file  -->
 
 
 ### NPM Commands
