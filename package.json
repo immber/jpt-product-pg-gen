@@ -11,6 +11,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "csv-parse": "^5.6.0"
+    "csv-parse": "^5.6.0",
+    "paapi5-nodejs-sdk": "^1.1.0"
   }
 }
