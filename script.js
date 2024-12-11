@@ -36,7 +36,7 @@ if (!csvFile) {
 }
 
 
-async function processRecords(records){
+async function processRecords(records){    
     for (const record of records){
         const csv_name = record[0];
         const csv_amznProdID = record[1];
@@ -45,6 +45,7 @@ async function processRecords(records){
         console.log(amznBlob);
     }
 }
+
 
 fs.createReadStream(csvFile, (err) => {
     if (err) ;

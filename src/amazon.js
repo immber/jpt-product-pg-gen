@@ -1,4 +1,3 @@
-import { responseCookiesToRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies.js';
 import { AMAZON_KEY,
     AMAZON_SECRET,
     AMAZON_PARTNER_TAG } from './definitions.js';
@@ -7,8 +6,7 @@ import ProductAdvertisingAPIv1 from 'paapi5-nodejs-sdk';
 
 
 export async function getAmznBlob(amznProdID) {
-    const newStr = `${amznProdID} + ${AMAZON_KEY}`;
-
+    //define the API client & instantiate a getItemsRequest
     let defaultClient = ProductAdvertisingAPIv1.ApiClient.instance;
     defaultClient.accessKey = AMAZON_KEY;
     defaultClient.secretKey = AMAZON_SECRET;
@@ -24,8 +22,8 @@ export async function getAmznBlob(amznProdID) {
     let getItemsRequest = new ProductAdvertisingAPIv1.GetItemsRequest();
     getItemsRequest['PartnerTag'] = AMAZON_PARTNER_TAG;
     getItemsRequest['PartnerType'] = 'Associates';
-    // getItemsRequest['ItemIds'] = [amznProdID];
-    getItemsRequest['ItemIds']  = ['B002MAPN62']; //static ID used in dev testing
+    getItemsRequest['ItemIds'] = [amznProdID];
+    //getItemsRequest['ItemIds']  = ['B002MAPN62']; //static ID used in dev testing
     getItemsRequest['Condition'] = 'New';
     /**
      * Choose resources you want from GetItemsResource enum
@@ -37,77 +35,39 @@ export async function getAmznBlob(amznProdID) {
         'ItemInfo.Title', 
         'ItemInfo.Features'
     ];
-
-    //define an object to return the api response, should match 'Resources' 
-    let amznBlob = {
-        imgPrimary: "",
-        imgVariants: "",
-        itemTitle: "",
-        itemFeatures: ""
-    }
-    
-    /**
-     * Function to parse GetItemsResponse into an object with key as ASIN
-     */
-    function parseResponse(itemsResponseList) {
-        var mappedResponse = {};
-        for (var i in itemsResponseList) {
-        if (itemsResponseList.hasOwnProperty(i)) {
-            mappedResponse[itemsResponseList[i]['ASIN']] = itemsResponseList[i];
-        }
-        }
-        return mappedResponse;
-    }
-
-    
-
-    function tryAPIcall(getItemsRequest) {
-        function onSuccess(data){
-            // console.log(data);
-            let getItemsResponse = ProductAdvertisingAPIv1.GetItemsResponse.constructFromObject(data);
-            // console.log(getItemsResponse);
-            if (getItemsResponse['ItemsResult'] !== undefined) {
-                let responseList = getItemsResponse['ItemsResult']['Items'];
-                // console.log(responseList[0]);
-                console.log(responseList[0].DetailPageURL);
-                console.log(responseList[0].Images.Primary.Medium.URL);
-                console.log(responseList[0].Images.Variants);
-                console.log(responseList[0].ItemInfo.Title.DisplayValue);
-                console.log(responseList[0].ItemInfo.Features.DisplayValues);
+   
+    //handle successful requests and parse the response
+    function onSuccess(data){
+        let getItemsResponse = ProductAdvertisingAPIv1.GetItemsResponse.constructFromObject(data);
+        if (getItemsResponse['ItemsResult'] !== undefined) {
+            let responseList = getItemsResponse['ItemsResult']['Items'];
+            //define an object to return the api response, should match 'Resources' + amznLink
+            let amznBlob = {
+                amznLink: responseList[0].DetailPageURL,
+                imgPrimary: responseList[0].Images.Primary.Medium.URL,
+                imgVariants: responseList[0].Images.Variants,
+                itemFeatures: responseList[0].ItemInfo.Features.DisplayValues,
+                itemTitle: responseList[0].ItemInfo.Title.DisplayValue
             }
+            return amznBlob;
+        }
 
-        }
-        function onError(err){
-            console.log(err);
-        }
-                
-        try {
-            api.getItems(getItemsRequest, (err, data) =>{
-                if (err) {
-                    onError(error);
-                } else {
-                    const gotIt = onSuccess(data);
-                    return gotIt;
+    }
+    //handle an error response instead
+    function onError(err){
+        console.log(err);
+    }
+    //return the promise of the result of the request to the api
+    //also send the request using a callback to handle the result
+    return new Promise( (resolve, reject) =>{
+        api.getItems(getItemsRequest, (err, data) =>{
+            if (err) {
+                onError(err);
+                reject(err);
+            } else {
+                const gotIt = onSuccess(data) ;
+                resolve(gotIt);
                 }
             })
-        } catch {
-
-        }    
-    }
-   
-
-    
-    const itemResp = tryAPIcall(getItemsRequest);
-    console.log('logging resp')
-    console.log(itemResp);
-    
-
-        
-    // let getItemsResponse = ProductAdvertisingAPIv1.GetItemsResponse.constructFromObject(data);
-    // console.log('loggin resp');
-    // console.log(resp);
-    // console.log('Complete Response: \n' + JSON.stringify(getItemsResponse, null, 1));
-    // let response_list = parseResponse(getItemsResponse['ItemsResult']['Items']);
-    
-    return newStr;
+    })        
 }
