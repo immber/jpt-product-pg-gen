@@ -2,6 +2,7 @@ import fs from 'fs';
 import { parse } from "csv-parse";
 import {staticVars} from './src/definitions.js';
 import {getAmznBlob} from './src/amazon.js';
+import {generateContent} from './src/anthropic.js'
 
 
 //start building each product with static var default values
@@ -43,6 +44,10 @@ async function processRecords(records){
         const csv_partnerLink = record[2];
         const amznBlob = await getAmznBlob(csv_amznProdID);
         console.log(amznBlob);
+        const contentBlob = await generateContent(amznBlob.itemFeatures);
+        console.log(contentBlob);
+        // const product = assembleProduct(amznBlob, contentBlob, csv_partnerLink);
+        // const wfResponse = await makeWFitem(product);
     }
 }
 
