@@ -3,6 +3,7 @@ import { parse } from "csv-parse";
 import {staticVars} from './src/definitions.js';
 import {getAmznBlob} from './src/amazon.js';
 import {generateContent} from './src/anthropic.js'
+import {makeWFitem} from './src/webflow.js';
 
 
 //parse the csv input
@@ -12,9 +13,20 @@ const csvFile = process.argv[2];
 if (!csvFile) {
     throw new Error('missing csv file');
 }
-
+    //function to assemble 'product' with staticVar default values & values from APIs
 async function assembleProduct(record, amznBlob, contentBlob) {
-    //start building each product with static var default values
+    //first handle the imgVarients from amzon and build a photoGallery for webflow
+    const imgList = amznBlob.imgVariants.map(elem => elem.Small.URL);
+    const photoGallery = [];
+    imgList.forEach(img => {
+        photoGallery.push(
+            {
+                "url": img,
+                "alt": null
+            }
+        )
+    });
+    //make an object to hold all the product deets
     const prodDeets = {
         name: record[0].trim(),
         slug: record[0].trim().toLowerCase().replaceAll(',',"").replaceAll(' ',"-"),
@@ -22,8 +34,8 @@ async function assembleProduct(record, amznBlob, contentBlob) {
         pageHeaderImage: amznBlob.imgPrimary,
         category: staticVars.category,
         collectionID: staticVars.collectionID,
-        excludeFromMustHaveList: staticVars.excludeFromMustHaves.toString().toUpperCase(),
-        enableRatings: staticVars.enableRatings.toString().toUpperCase(),
+        excludeFromMustHaveList: staticVars.excludeFromMustHaves,
+        enableRatings: staticVars.enableRatings,
         shortProdDesc: contentBlob.title,
         longProdDesc: amznBlob.itemTitle,
         reviewHeadline: contentBlob.reviewHeadline,
@@ -34,7 +46,7 @@ async function assembleProduct(record, amznBlob, contentBlob) {
         partnerLink: record[2],
         partnerLinkLabel: staticVars.partnerLinkLabel,
         amznLink: amznBlob.amznLink,
-        photoGallery: "" //will pull from amznBlob.imgVariants
+        photoGallery: photoGallery //which was constructed above
     }
     return prodDeets;
     
@@ -44,12 +56,14 @@ async function processRecords(records){
     for (const record of records){
         //using the amznProdID from the csv
         const amznBlob = await getAmznBlob(record[1]);
-        // console.log(amznBlob);
+        console.log("Got prod deets from Amzn");
         const contentBlob = await generateContent(amznBlob.itemFeatures);
-        // console.log(contentBlob);
+        console.log("Got copy from claude");
         const product = await assembleProduct(record, amznBlob, contentBlob);
-        console.log(product);
-        // const wfResponse = await makeWFitem(product);
+        // console.log(product);
+        const wfResponse = await makeWFitem(product);
+        console.log(wfResponse);
+
     }
 }
 
